@@ -584,6 +584,57 @@ Items</caption>
 </table>
 </div>
 </div>
+<div id="question-2" class="section level1">
+<h1>Question 2</h1>
+<div id="load-dataset-1" class="section level2">
+<h2>Load dataset</h2>
+<pre class="r"><code>data(&quot;brfss_smart2010&quot;)</code></pre>
+</div>
+<div id="data-cleaning" class="section level2">
+<h2>Data Cleaning</h2>
+<pre class="r"><code>brfss &lt;- brfss_smart2010 %&gt;% 
+  rename(location_abbr = Locationabbr,
+         location_desc = Locationdesc,
+         data_source = DataSource,
+         class_id = ClassId,
+         topic_id = TopicId,
+         location_id = LocationID,
+         question_id = QuestionID,
+         resp_id = RESPID,
+         geo_location = GeoLocation)%&gt;%
+  janitor::clean_names() %&gt;%
+  filter( topic == &quot;Overall Health&quot; | 
+          response == &quot;Excellent&quot; | response == &quot;Very good&quot; | response == &quot;Good&quot; | response == &quot;Fair&quot; | response == &quot;Poor&quot;) %&gt;%
+  mutate(response = factor(response, 
+                           levels = c(&quot;Poor&quot;, &quot;Fair&quot;, &quot;Good&quot;, &quot;Very good&quot;, &quot;Excellent&quot;),
+                           ordered = TRUE))</code></pre>
+<p>After performing data cleaning, the subset of the orginal data
+contains 10625 rows and 23 columns.</p>
+</div>
+<div id="in-2002-which-states-were-observed-at-7-or-more-locations-what-about-in-2010" class="section level2">
+<h2>In 2002, which states were observed at 7 or more locations? What
+about in 2010?</h2>
+<pre class="r"><code>brfss %&gt;% 
+  filter( year == &quot;2002&quot;)%&gt;% 
+  group_by(location_abbr)%&gt;%
+  summarise(num_location=n_distinct(location_desc))%&gt;% 
+  filter(num_location &gt;=7)%&gt;%
+  pull(location_abbr)</code></pre>
+<pre><code>## [1] &quot;CT&quot; &quot;FL&quot; &quot;MA&quot; &quot;NC&quot; &quot;NJ&quot; &quot;PA&quot;</code></pre>
+<p>For the 2002, there are 6 states that were observed at 7 or more
+locations including: “CT” “FL” “MA” “NC” “NJ” “PA”</p>
+<pre class="r"><code>brfss %&gt;% 
+  filter( year == &quot;2010&quot;)%&gt;% 
+  group_by(location_abbr)%&gt;%
+  summarise(num_location=n_distinct(location_desc))%&gt;% 
+  filter(num_location &gt;=7)%&gt;%
+  pull(location_abbr)</code></pre>
+<pre><code>##  [1] &quot;CA&quot; &quot;CO&quot; &quot;FL&quot; &quot;MA&quot; &quot;MD&quot; &quot;NC&quot; &quot;NE&quot; &quot;NJ&quot; &quot;NY&quot; &quot;OH&quot; &quot;PA&quot; &quot;SC&quot; &quot;TX&quot; &quot;WA&quot;</code></pre>
+<p>However, in 2010, there are 14 states that were observed at 7 or more
+locations including: “CA” “CO” “FL” “MA” “MD” “NC” “NE” “NJ” “NY” “OH”
+“PA” “SC” “TX” “WA”.</p>
+</div>
+</div>
 
 
 
