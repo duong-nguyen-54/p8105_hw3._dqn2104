@@ -152,3 +152,89 @@ ggplot(ny_2006_2010, aes (x=response, y=data_value))+
 ```
 This is the boxplot plots for distribution of data_value across 5 types of responses in NY in 2006 & 2010. 
 
+# Question 3
+
+## Data Import, Tidy, & Wrangling
+```{r}
+accel <- read_csv("C:/Users/duong/OneDrive/Desktop/MAILMAN 3/Data 1/homework3_/nhanes_accel.csv") %>%
+  janitor::clean_names() %>% 
+  mutate(seqn = as.integer(seqn))
+
+demographic <- read_csv("C:/Users/duong/OneDrive/Desktop/MAILMAN 3/Data 1/homework3_/nhanes_covar.csv", skip = 4) %>%
+  janitor::clean_names()%>%
+  na.omit() %>%
+  filter(age >= 21) %>%
+  mutate(seqn = as.integer(seqn), sex=as.factor(sex), education = as.factor(education))
+
+merge_df <- inner_join(accel, demographic, by = "seqn") 
+
+merge_df <-merge_df %>%
+  select(seqn, sex, age, bmi, education, everything()) %>% 
+  mutate(sex = if_else(sex == "1", "male", "female"), 
+         education = if_else(education == "1", "Less than high school", 
+                             if_else(education == "2", "High school equivalent", 
+                                     if_else(education=="3", "More than high school", NA))))
+```
+
+## Create table 
+```{r}
+education_sex <- table(merge_df$sex, merge_df$education)
+
+knitr::kable(education_sex, caption = "The number of men and women in each education category")
+```
+From this table, we can observe that the numbers of female and male are relatively similarin "Less than high school" and "More than high school" catergories, but there are significantly more male than female in "High school equivalent" (35>>23).
+
+## Plot 
+```{r}
+ggplot(merge_df, aes(x = factor(education, levels= c("Less than high school", "High school equivalent", "More than high school"), ordered = TRUE), y = age, fill = sex)) +
+  geom_boxplot() +
+  labs(title = "Age Distribution by Sex and Education",
+       x = "Education Level",
+       y = "Age",
+       fill = "Sex") +
+    theme_minimal()
+```
+The people from "More than high school" are the youngest on average, compared to the other groups, while "Less than high school" is the ones being the oldest on average.
+The group with the largest gap in age distribution between male and female is "High school equivalent". In this group, female are older than male. 
+
+
+## Total activity Plot 
+
+```{r}
+merge_df %>%
+  mutate(rowsums = select(., -c(1:5)) %>% 
+           rowSums(na.rm = TRUE))%>%
+  ggplot(aes(x = age, y = rowsums, color = sex)) +
+  geom_point(aes(shape = sex), alpha = 0.5) + 
+  geom_smooth(method = "lm", se = FALSE) + 
+  facet_wrap(~ factor(education, levels= c("Less than high school", "High school equivalent", "More than high school"), ordered = TRUE)) + 
+  labs(title = "Total Activity with Age by Sex and Education Level",
+       x = "Age",
+       y = "Total Activity",
+       color = "Sex",
+       shape = "Sex") +
+  theme_minimal()
+```
+Description: 
+There is a consistene trend across all 3 education levels that there is a negative correlation between the total activity and age. This can imply that the total activity decrease with age, similarly between both sexes. The group in "Less than high school" shows more total activity than the other two groups for both male and female. For groups of "High school equivalent" and "More than high school", women always have more total activity than men at the same age.
+
+## 3-panel plot
+```{r}
+merge_df_hour <- merge_df %>%
+  pivot_longer(min1:min1440, 
+               names_prefix = "min",
+               names_to = "minute", 
+               values_to = "activity") %>%
+  mutate(minute = as.integer(minute))
+
+ggplot(merge_df_hour, aes(x = minute, y = activity, color = sex)) +
+  geom_line(alpha = 0.5) +
+  geom_smooth(se = FALSE) +
+  facet_wrap(~ factor(education, levels= c("Less than high school", "High school equivalent", "More than high school"), ordered = TRUE), ncol = 1) +
+  scale_x_continuous(name = "Hour", breaks = seq(0, 1440, 60), labels = 0:24) +
+  labs(title = "24-hour Activity Time Courses by Education Level",
+       y = "Activity",
+       color = "Sex") 
+```
+Description:
+Across 3 education groups, there is very little evidence of  gender-related variation in total activity as indicated by the smooth trends. In all 3 groups, the majority of activity is observed from  9 am to 8 pm. Notably, the daily activity time follows a ranking of "Less than high school" > "High school equivalent" > "More than high school".
