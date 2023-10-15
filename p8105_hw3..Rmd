@@ -167,11 +167,11 @@ First of all, it is worth to notice that there are some counties (i.e. Bronx) do
 
 ## Data Import, Tidy, & Wrangling
 ```{r}
-accel <- read_csv("C:/Users/duong/OneDrive/Desktop/MAILMAN 3/Data 1/homework3_/nhanes_accel.csv") %>%
+accel <- read_csv("nhanes_accel.csv") %>%
   janitor::clean_names() %>% 
   mutate(seqn = as.integer(seqn))
 
-demographic <- read_csv("C:/Users/duong/OneDrive/Desktop/MAILMAN 3/Data 1/homework3_/nhanes_covar.csv", skip = 4) %>%
+demographic <- read_csv("nhanes_covar.csv", skip = 4) %>%
   janitor::clean_names()%>%
   na.omit() %>%
   filter(age >= 21) %>%
